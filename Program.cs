@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Hacker_News_API
+namespace HackerNewsAPI
 {
     public class Program
     {

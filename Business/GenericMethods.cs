@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Hacker_News_API.Business
+namespace HackerNewsAPI.Business
 {
     public class GenericMethods
     {

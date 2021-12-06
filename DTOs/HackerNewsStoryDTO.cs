@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Hacker_News_API.DTOs
+namespace HackerNewsAPI.DTOs
 {
-    public class HackerNewStoryDTO
+    public class HackerNewsStoryDTO
     {
         public string by { get; set; }
         public List<int> kids { get; set; }
