@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace HackerNewsAPI.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("best20")]
     public class BestStoriesController : ControllerBase
     {
         private IMemoryCache _cache;
@@ -33,68 +33,75 @@ namespace HackerNewsAPI.Controllers
         [HttpGet]
         public async Task<List<HackerNewsStoryDTO>> Get()
         {
-            string respString;
-            List<int> stories;
-            List<HackerNewsStoryDTO> bestStorysInDetails;
-
-            var cacheOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(cacheExpirationMin));
-
-            if (!_cache.TryGetValue("bestStories", out bestStorysInDetails))
+            try
             {
-                using (HttpClient httpClient = new HttpClient())
-                {
-                    HttpResponseMessage response = await httpClient.GetAsync(HackerNewsBestStoriesURL);
+                string respString;
+                List<int> stories;
+                List<HackerNewsStoryDTO> bestStorysInDetails;
 
-                    if (response.IsSuccessStatusCode)
+                var cacheOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(cacheExpirationMin));
+
+                if (!_cache.TryGetValue("bestStories", out bestStorysInDetails))
+                {
+                    using (HttpClient httpClient = new HttpClient())
                     {
-                        respString = await response.Content.ReadAsStringAsync();
-                        stories = JsonConvert.DeserializeObject<List<int>>(respString);
+                        HttpResponseMessage response = await httpClient.GetAsync(HackerNewsBestStoriesURL);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            respString = await response.Content.ReadAsStringAsync();
+                            stories = JsonConvert.DeserializeObject<List<int>>(respString);
+                        }
+                        else
+                        {
+                            return new List<HackerNewsStoryDTO>();
+                        }
+                    }
+
+                    if (stories.Count > 0)
+                    {
+                        bestStorysInDetails = new List<HackerNewsStoryDTO>();
+
+                        using (HttpClient httpClient = new HttpClient())
+                        {
+                            foreach (var StoryId in stories)
+                            {
+                                HttpResponseMessage response = await httpClient.GetAsync(HackerNewsStoryDetailsURL + StoryId + ".json");
+                                if (response.IsSuccessStatusCode)
+                                {
+                                    var respData = await response.Content.ReadAsStringAsync();
+                                    var story = JsonConvert.DeserializeObject<HackerNewsStory>(respData);
+                                    var hackerNewsStory = new HackerNewsStoryDTO();
+
+                                    hackerNewsStory.title = story.title;
+                                    hackerNewsStory.uri = story.url;
+                                    hackerNewsStory.PostedBy = story.by;
+                                    hackerNewsStory.time = GenericMethods.UnixTimeStampToDateTime(story.time);
+                                    hackerNewsStory.score = story.score;
+                                    hackerNewsStory.CommentsCount = story.kids.Count();
+
+                                    bestStorysInDetails.Add(hackerNewsStory);
+                                }
+                                else
+                                {
+                                    return new List<HackerNewsStoryDTO>();
+                                }
+                            }
+                        }
+
+                        _cache.Set("bestStories", bestStorysInDetails, cacheOptions);
                     }
                     else
                     {
                         return new List<HackerNewsStoryDTO>();
                     }
                 }
-
-                if (stories.Count > 0)
-                {
-                    bestStorysInDetails = new List<HackerNewsStoryDTO>();
-
-                    using (HttpClient httpClient = new HttpClient())
-                    {
-                        foreach (var StoryId in stories)
-                        {
-                            HttpResponseMessage response = await httpClient.GetAsync(HackerNewsStoryDetailsURL + StoryId + ".json");
-                            if (response.IsSuccessStatusCode)
-                            {
-                                var respData = await response.Content.ReadAsStringAsync();
-                                var story = JsonConvert.DeserializeObject<HackerNewsStory>(respData);
-                                var hackerNewsStory = new HackerNewsStoryDTO();
-
-                                hackerNewsStory.title = story.title;
-                                hackerNewsStory.uri = story.url;
-                                hackerNewsStory.PostedBy = story.by;
-                                hackerNewsStory.time = GenericMethods.UnixTimeStampToDateTime(story.time);
-                                hackerNewsStory.score = story.score;
-                                hackerNewsStory.CommentsCount = story.kids.Count();
-
-                                bestStorysInDetails.Add(hackerNewsStory);
-                            }
-                            else
-                            {
-                                return new List<HackerNewsStoryDTO>();
-                            }
-                        }
-                    }
-
-                    _cache.Set("bestStories", bestStorysInDetails, cacheOptions);
-                }
-                else
-                {
-                    return new List<HackerNewsStoryDTO>();
-                }
+                return bestStorysInDetails.Take(20).OrderByDescending(o => o.score).ToList();
             }
-            return bestStorysInDetails.Take(20).OrderByDescending(o => o.score).ToList();
+            catch (Exception expt)
+            {
+                throw expt.InnerException;
+            }
         }
     }
 }
