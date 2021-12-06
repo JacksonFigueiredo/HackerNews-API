@@ -72,11 +72,11 @@ namespace HackerNewsAPI.Controllers
                                 var hackerNewsStory = new HackerNewsStoryDTO();
 
                                 hackerNewsStory.title = story.title;
-                                hackerNewsStory.url = story.url;
-                                hackerNewsStory.by = story.by;
+                                hackerNewsStory.uri = story.url;
+                                hackerNewsStory.PostedBy = story.by;
                                 hackerNewsStory.time = GenericMethods.UnixTimeStampToDateTime(story.time);
                                 hackerNewsStory.score = story.score;
-                                //hackerNewsStory.kids = story.kids.Count;
+                                hackerNewsStory.CommentsCount = story.kids.Count();
 
                                 bestStorysInDetails.Add(hackerNewsStory);
                             }

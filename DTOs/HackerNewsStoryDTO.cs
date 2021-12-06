@@ -7,11 +7,11 @@ namespace HackerNewsAPI.DTOs
 {
     public class HackerNewsStoryDTO
     {
-        public string by { get; set; }
-        public List<int> kids { get; set; }
+        public string PostedBy { get; set; }
+        public int CommentsCount { get; set; }
         public int score { get; set; }
         public DateTime time { get; set; }
         public string title { get; set; }
-        public string url { get; set; }
+        public string uri { get; set; }
     }
 }
