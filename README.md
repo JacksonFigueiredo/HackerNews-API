@@ -1,2 +1,5 @@
 # HackerNews-API
 Hacker News API Challenge for ISBAN
+
+
+SENIOR .NET CORE DEVELOPER TEST #3This test contains a challenge and it is up to you the amount of time and effort to put on it. We expect you to spend at least 2-3 hours to complete the challenge.To submit your results, you should create a public repository with the source code and share the link with us. The repository should include a README with instructions on how to run the solution(s) (if applicable) and any assumptions, comments and information that you find relevant.In case you didn’t have time to do some enhancements in your code, please describe itas detailed as possibleinthe READMEfile.PROBLEMThe goal of this exercise is to build anAPIto retrieve the details of the first 20 “best stories”from Hacker News.The API must be built with ASP.NET Core (2.2 or higher).
