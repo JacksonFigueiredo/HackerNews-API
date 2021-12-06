@@ -1,4 +1,6 @@
-﻿using Hacker_News_API.Models;
+﻿using Hacker_News_API.Business;
+using Hacker_News_API.DTOs;
+using Hacker_News_API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
@@ -12,7 +14,7 @@ namespace Hacker_News_API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class BestStoriesController :  ControllerBase
+    public class BestStoriesController : ControllerBase
     {
         private IMemoryCache _cache;
         private const int cacheExpirationMin = 4;
@@ -29,11 +31,11 @@ namespace Hacker_News_API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<List<HackerNewsStory>> Get()
+        public async Task<List<HackerNewStoryDTO>> Get()
         {
             string respString;
             List<int> stories;
-            List<HackerNewsStory> bestStorysInDetails;
+            List<HackerNewStoryDTO> bestStorysInDetails;
 
             var cacheOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(cacheExpirationMin));
 
@@ -50,14 +52,14 @@ namespace Hacker_News_API.Controllers
                     }
                     else
                     {
-                        return new List<HackerNewsStory>();
+                        return new List<HackerNewStoryDTO>();
                     }
                 }
 
                 if (stories.Count > 0)
                 {
-                    bestStorysInDetails = new List<HackerNewsStory>();
-        
+                    bestStorysInDetails = new List<HackerNewStoryDTO>();
+
                     using (HttpClient httpClient = new HttpClient())
                     {
                         foreach (var StoryId in stories)
@@ -67,19 +69,20 @@ namespace Hacker_News_API.Controllers
                             {
                                 var respData = await response.Content.ReadAsStringAsync();
                                 var story = JsonConvert.DeserializeObject<HackerNewsStory>(respData);
-                                var hackerNewsStory = new HackerNewsStory();
-                                
+                                var hackerNewsStory = new HackerNewStoryDTO();
+
                                 hackerNewsStory.title = story.title;
                                 hackerNewsStory.url = story.url;
                                 hackerNewsStory.by = story.by;
-                                hackerNewsStory.time = story.time;
+                                hackerNewsStory.time = GenericMethods.UnixTimeStampToDateTime(story.time);
                                 hackerNewsStory.score = story.score;
-                     
+                                //hackerNewsStory.kids = story.kids.Count;
+
                                 bestStorysInDetails.Add(hackerNewsStory);
                             }
                             else
                             {
-                                return new List<HackerNewsStory>();
+                                return new List<HackerNewStoryDTO>();
                             }
                         }
                     }
@@ -88,7 +91,7 @@ namespace Hacker_News_API.Controllers
                 }
                 else
                 {
-                    return new List<HackerNewsStory>();
+                    return new List<HackerNewStoryDTO>();
                 }
             }
             return bestStorysInDetails.Take(20).OrderByDescending(o => o.score).ToList();
