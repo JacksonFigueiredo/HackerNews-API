@@ -39,7 +39,7 @@ namespace HackerNewsAPI.Controllers
                 List<int> stories;
                 List<HackerNewsStoryDTO> bestStorysInDetails;
 
-                var cacheOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(cacheExpirationMin));
+                var cacheOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(cacheExpirationMin)); // Set Cache.
 
                 if (!_cache.TryGetValue("bestStories", out bestStorysInDetails))
                 {
@@ -66,11 +66,13 @@ namespace HackerNewsAPI.Controllers
                         {
                             foreach (var StoryId in stories)
                             {
-                                HttpResponseMessage response = await httpClient.GetAsync(HackerNewsStoryDetailsURL + StoryId + ".json");
+                                HttpResponseMessage response = await httpClient.GetAsync(HackerNewsStoryDetailsURL + StoryId + ".json"); 
                                 if (response.IsSuccessStatusCode)
                                 {
                                     var respData = await response.Content.ReadAsStringAsync();
+
                                     var story = JsonConvert.DeserializeObject<HackerNewsStory>(respData);
+
                                     var hackerNewsStory = new HackerNewsStoryDTO();
 
                                     hackerNewsStory.title = story.title;
@@ -79,6 +81,8 @@ namespace HackerNewsAPI.Controllers
                                     hackerNewsStory.time = GenericMethods.UnixTimeStampToDateTime(story.time);
                                     hackerNewsStory.score = story.score;
                                     hackerNewsStory.CommentsCount = story.kids.Count();
+
+                                    // using DTO Above to populate the stories.
 
                                     bestStorysInDetails.Add(hackerNewsStory);
                                 }
@@ -89,18 +93,18 @@ namespace HackerNewsAPI.Controllers
                             }
                         }
 
-                        _cache.Set("bestStories", bestStorysInDetails, cacheOptions);
+                        _cache.Set("bestStories", bestStorysInDetails, cacheOptions); // insert the best stories inside a cache, to now stay asking always to the endpoint
                     }
                     else
                     {
                         return new List<HackerNewsStoryDTO>();
                     }
                 }
-                return bestStorysInDetails.Take(20).OrderByDescending(o => o.score).ToList();
+                return bestStorysInDetails.Take(20).OrderByDescending(o => o.score).ToList(); // take only 20 stories, then sorting by their score in descending order
             }
             catch (Exception expt)
             {
-                throw expt.InnerException;
+                throw expt.InnerException; // Exception Handling - At least throwing
             }
         }
     }
